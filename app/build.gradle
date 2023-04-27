@@ -1,0 +1,159 @@
+import java.time.LocalDate
+import java.nio.file.FileSystems
+
+plugins {
+    id 'com.android.application'
+}
+
+class MergeStates {
+    private static class MergedRow {
+        private final byte firstRow
+        private final byte lastRow
+
+        MergedRow(byte firstRow, byte lastRow) {
+            this.firstRow = firstRow
+            this.lastRow = lastRow
+        }
+
+        byte getFirstRow() {
+            return firstRow
+        }
+
+        byte getLastRow() {
+            return lastRow
+        }
+    }
+
+    private static class MergedRows {
+        private final MergedRow[] rows = new MergedRow[MAXIMUM_MERGED_ROW]
+        private byte length = 0
+
+        void add(int firstRow, int lastRow) {
+            rows[length++] = new MergedRow((byte)firstRow, (byte)lastRow)
+        }
+
+        void serialize(OutputStream stream) {
+            stream.write(length)
+            for (int i = 0; i < MAXIMUM_MERGED_ROW; i++) {
+                var mergedRow = rows[i]
+                byte firstRow, lastRow
+                if (mergedRow != null) {
+                    firstRow = mergedRow.firstRow
+                    lastRow = mergedRow.lastRow
+                } else {
+                    firstRow = 0
+                    lastRow = 0
+                }
+                stream.write(firstRow)
+                stream.write(lastRow)
+            }
+        }
+    }
+
+    private static final int ROW_COUNT = 12 // Keep in sync with Table.java
+    private static final int INVALID_ROW = ROW_COUNT
+    private static final int BIT_COUNT = Character.SIZE
+    private static final int MAXIMUM_MERGED_ROW = ROW_COUNT / 2
+    private static final int MAXIMUM_MERGED_ROWS = (1 << (ROW_COUNT - 1)) - 1
+
+    private static int bitMaskForRow(int row) {
+        return (1 << (BIT_COUNT - row)) - 1
+    }
+
+    private static int rowIndexFromState(int value) {
+        return value - (BIT_COUNT - ROW_COUNT)
+    }
+
+    private static short changeState(int value, short state) {
+        return (short) ((short) (~state) & bitMaskForRow(value))
+    }
+
+    private static short changeValue(int value, short state) {
+        return (short) (state & bitMaskForRow(value))
+    }
+
+    private static int computeState(short value) {
+        return Integer.numberOfLeadingZeros((int) value) - Character.SIZE
+    }
+
+    static void compute(OutputStream stream) {
+        for (int i = 0; i <= MAXIMUM_MERGED_ROWS; i++) {
+            MergedRows mergedRows = new MergedRows()
+            short value = (short) (i << 1)
+            for (; ; ) {
+                short state = computeState(value)
+                int firstRow = rowIndexFromState(state)
+                if (firstRow == INVALID_ROW) {
+                    break
+                }
+                state = computeState(changeState(state, value))
+                int lastRow = rowIndexFromState(state)
+                if (lastRow == INVALID_ROW) {
+                    break
+                }
+                mergedRows.add(firstRow, lastRow)
+                value = changeValue(state, value)
+            }
+            mergedRows.serialize(stream)
+        }
+    }
+}
+
+android {
+    compileSdk 33
+
+    namespace 'com.lxy.timetable'
+
+    sourceSets {
+        main {
+            res {
+                var raw = FileSystems.default.getPath(srcDirs.first().absolutePath, 'raw', 'merged_rows.bin')
+                File file = raw.toFile()
+                if (!file.exists()) {
+                    try (var stream = new FileOutputStream(file)) {
+                        MergeStates.compute(stream)
+                    }
+                }
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId 'com.lxy.timetable'
+        minSdk 26
+        targetSdk 33
+        versionCode 1
+        versionName '1.0'
+        resConfigs 'zh-rCN'
+
+        final LocalDate MIN = LocalDate.of(1970, 1, 1)
+        final LocalDate MAX = LocalDate.of(9999, 12, 31)
+
+        buildConfigField 'long', 'MIN_DATE', "${MIN.toEpochDay()}"
+        buildConfigField 'long', 'MAX_DATE', "${MAX.toEpochDay()}"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity:1.6.1'
+    implementation 'com.github.huangyanbin:smartTable:master'
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+}
