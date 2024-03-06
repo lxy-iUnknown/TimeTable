@@ -1,0 +1,67 @@
+<resources>
+
+    <string-array name="row_header">
+        <item>第一节</item>
+        <item>第二节</item>
+        <item>第三节</item>
+        <item>第四节</item>
+        <item>第五节</item>
+        <item>第六节</item>
+        <item>第七节</item>
+        <item>第八节</item>
+        <item>第九节</item>
+        <item>第十节</item>
+        <item>第十一节</item>
+        <item>第十二节</item>
+    </string-array>
+
+    <string-array name="column_header">
+        <item/>
+        <item>星期一</item>
+        <item>星期二"</item>
+        <item>星期三</item>
+        <item>星期四</item>
+        <item>星期五</item>
+    </string-array>
+
+    <string-array name="row_tooltip">
+        <item>上课时间：8:30–9:10</item>
+        <item>上课时间：9:15–9:55</item>
+        <item>上课时间：10:15–11:55</item>
+        <item>上课时间：11:00–11:40</item>
+        <item>上课时间：11:45–12:25</item>
+        <item>上课时间：13:30–14:10</item>
+        <item>上课时间：14:15–14:55</item>
+        <item>上课时间：15:00–15:40</item>
+        <item>上课时间：16:00–16:40</item>
+        <item>上课时间：16:45–17:25</item>
+        <item>上课时间：19:00–20:20</item>
+        <item>上课时间：20:30–21:45</item>
+    </string-array>
+
+    <string name="app_name">课程表</string>
+
+    <string name="format_begin_time" formatted="true">开学日期：%1$d年%2$d月%3$d日（第%4$d周）</string>
+    <string name="unknown_begin_time" formatted="true">开学日期：未知</string>
+
+    <string name="request_cancelled">用户已取消！</string>
+
+    <string name="prompt_load_time_table_file">无法获取课程表，是否加载课程表文件？</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+
+    <string name="time_table_file_not_found">课程表文件不存在</string>
+    <string name="time_table_file_corrupted">课程表文件已损坏</string>
+    <string name="delete_time_table_file_failed">删除内部存储中的课程表文件失败\n如果反复出现此问题，可尝试清除数据或重新安装该程序</string>
+
+    <string name="open_time_table_file">打开课程表文件</string>
+    <string name="open_time_table_file_succeeded">打开课程表文件成功</string>
+    <string name="open_time_table_file_failed">打开课程表文件失败</string>
+
+    <string name="save_time_table_file">保存课程表文件</string>
+    <string name="save_time_table_file_succeeded">保存课程表文件成功</string>
+    <string name="save_time_table_file_failed">保存课程表文件失败</string>
+    <string name="save_time_table_file_to_internal_storage_failed">保存课程表文件到内部存储失败\n如果反复出现此问题，可尝试清除数据或重新安装该程序</string>
+
+    <string name="class_info" formatted="true">单周课程：%1$s\n双周课程：%2$s</string>
+</resources>

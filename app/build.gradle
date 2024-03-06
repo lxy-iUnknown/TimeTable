@@ -1,0 +1,169 @@
+import java.time.LocalDate
+
+class MergeStates {
+    private static class MergedRow {
+        private final byte firstRow
+        private final byte lastRow
+
+        MergedRow(byte firstRow, byte lastRow) {
+            this.firstRow = firstRow
+            this.lastRow = lastRow
+        }
+
+        byte getFirstRow() {
+            return firstRow
+        }
+
+        byte getLastRow() {
+            return lastRow
+        }
+    }
+
+    private static class MergedRows {
+        private final MergedRow[] rows = new MergedRow[MAXIMUM_MERGED_ROW]
+        private byte length = 0
+
+        void add(int firstRow, int lastRow) {
+            rows[length++] = new MergedRow((byte)firstRow, (byte)lastRow)
+        }
+
+        void serialize(OutputStream stream) {
+            stream.write(length)
+            for (int i = 0; i < MAXIMUM_MERGED_ROW; i++) {
+                var mergedRow = rows[i]
+                byte firstRow, lastRow
+                if (mergedRow != null) {
+                    firstRow = mergedRow.firstRow
+                    lastRow = mergedRow.lastRow
+                } else {
+                    firstRow = 0
+                    lastRow = 0
+                }
+                stream.write(firstRow)
+                stream.write(lastRow)
+            }
+        }
+    }
+
+    private static final int ROW_COUNT = 12 // Keep in sync with TimeTableData.java
+    private static final int INVALID_ROW = ROW_COUNT
+    private static final int BIT_COUNT = Character.SIZE
+    private static final int MAXIMUM_MERGED_ROW = ROW_COUNT / 2
+    private static final int MAXIMUM_MERGED_ROWS = (1 << (ROW_COUNT - 1)) - 1
+
+    private static int bitMaskForRow(int row) {
+        return (1 << (BIT_COUNT - row)) - 1
+    }
+
+    private static int rowIndexFromState(int value) {
+        return value - (BIT_COUNT - ROW_COUNT)
+    }
+
+    private static short changeState(int value, short state) {
+        return (short) ((short) (~state) & bitMaskForRow(value))
+    }
+
+    private static short changeValue(int value, short state) {
+        return (short) (state & bitMaskForRow(value))
+    }
+
+    private static int computeState(short value) {
+        return Integer.numberOfLeadingZeros((int) value) - Character.SIZE
+    }
+
+    static void compute(OutputStream stream) {
+        for (int i = 0; i <= MAXIMUM_MERGED_ROWS; i++) {
+            MergedRows mergedRows = new MergedRows()
+            short value = (short) (i << 1)
+            for (; ; ) {
+                short state = computeState(value)
+                int firstRow = rowIndexFromState(state)
+                if (firstRow == INVALID_ROW) {
+                    break
+                }
+                state = computeState(changeState(state, value))
+                int lastRow = rowIndexFromState(state)
+                if (lastRow == INVALID_ROW) {
+                    break
+                }
+                mergedRows.add(firstRow, lastRow)
+                value = changeValue(state, value)
+            }
+            mergedRows.serialize(stream)
+        }
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdk 34
+
+    namespace 'com.lxy.timetable'
+
+    sourceSets {
+        main {
+            res {
+                var root = new File(srcDirs.first().absolutePath, 'raw')
+                var raw = new File(root, 'merged_rows.bin')
+                if (!raw.exists()) {
+                    root.mkdirs()
+                    try (var stream = new FileOutputStream(raw)) {
+                        MergeStates.compute(stream)
+                    }
+                }
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.example.myapplication"
+        minSdkVersion 28
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+        resConfigs 'zh-rCN'
+
+        final LocalDate MIN = LocalDate.of(1970, 1, 1)
+        final LocalDate MAX = LocalDate.of(9999, 12, 31)
+
+        buildConfigField 'long', 'MIN_DATE', "${MIN.toEpochDay()}"
+        buildConfigField 'long', 'MAX_DATE', "${MAX.toEpochDay()}"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        dataBinding true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        exclude '/DebugProbesKt.bin'
+        exclude '/kotlin/*.kotlin_builtins'
+        exclude '/kotlin/**/*.kotlin_builtins'
+        exclude '/META-INF/*.version'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity:1.8.2'
+    implementation 'com.github.huangyanbin:smartTable:master'
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+    // https://stackoverflow.com/questions/75712899/duplicate-class-kotlin-random-jdk8-found-in-modules-jetified-kotlin-stdlib-1-8-1
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.0')
+}
