@@ -9,14 +9,6 @@ class MergeStates {
             this.firstRow = firstRow
             this.lastRow = lastRow
         }
-
-        byte getFirstRow() {
-            return firstRow
-        }
-
-        byte getLastRow() {
-            return lastRow
-        }
     }
 
     private static class MergedRows {
@@ -24,7 +16,7 @@ class MergeStates {
         private byte length = 0
 
         void add(int firstRow, int lastRow) {
-            rows[length++] = new MergedRow((byte)firstRow, (byte)lastRow)
+            rows[length++] = new MergedRow(firstRow as byte, lastRow as byte)
         }
 
         void serialize(OutputStream stream) {
@@ -45,7 +37,8 @@ class MergeStates {
         }
     }
 
-    private static final int ROW_COUNT = 12 // Keep in sync with TimeTableData.java
+    // Keep in sync with TimeTableData.java
+    private static final int ROW_COUNT = 12
     private static final int INVALID_ROW = ROW_COUNT
     private static final int BIT_COUNT = Character.SIZE
     private static final int MAXIMUM_MERGED_ROW = ROW_COUNT / 2
@@ -60,29 +53,29 @@ class MergeStates {
     }
 
     private static short changeState(int value, short state) {
-        return (short) ((short) (~state) & bitMaskForRow(value))
+        return (~state) as short & bitMaskForRow(value)
     }
 
     private static short changeValue(int value, short state) {
-        return (short) (state & bitMaskForRow(value))
+        return state & bitMaskForRow(value)
     }
 
-    private static int computeState(short value) {
+    private static short computeState(short value) {
         return Integer.numberOfLeadingZeros((int) value) - Character.SIZE
     }
 
     static void compute(OutputStream stream) {
         for (int i = 0; i <= MAXIMUM_MERGED_ROWS; i++) {
             MergedRows mergedRows = new MergedRows()
-            short value = (short) (i << 1)
+            var value = (i << 1) as short
             for (; ; ) {
-                short state = computeState(value)
-                int firstRow = rowIndexFromState(state)
+                var state = computeState(value)
+                var firstRow = rowIndexFromState(state)
                 if (firstRow == INVALID_ROW) {
                     break
                 }
                 state = computeState(changeState(state, value))
-                int lastRow = rowIndexFromState(state)
+                var lastRow = rowIndexFromState(state)
                 if (lastRow == INVALID_ROW) {
                     break
                 }

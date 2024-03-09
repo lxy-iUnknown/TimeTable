@@ -13,6 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
-sample.bin
+/app/src/main/java/res/raw/merged_rows.bin
 /app/debug
 /app/release
