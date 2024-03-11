@@ -3,10 +3,10 @@ package com.lxy.timetable.data;
 import androidx.annotation.NonNull;
 
 import com.lxy.timetable.BuildConfig;
+import com.lxy.timetable.contract.Contract;
 import com.lxy.timetable.contract.Operator;
 import com.lxy.timetable.contract.Value;
 import com.lxy.timetable.util.ByteArrayAppender;
-import com.lxy.timetable.contract.Contract;
 import com.lxy.timetable.util.DateUtil;
 
 import java.io.EOFException;

@@ -1,11 +1,13 @@
 package com.lxy.timetable;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.ComponentActivity;
@@ -25,6 +27,7 @@ import com.bin.david.form.data.style.FontStyle;
 import com.bin.david.form.data.style.LineStyle;
 import com.bin.david.form.data.table.ArrayTableData;
 import com.bin.david.form.utils.DensityUtils;
+import com.lxy.timetable.contract.Contract;
 import com.lxy.timetable.contract.Operator;
 import com.lxy.timetable.contract.Value;
 import com.lxy.timetable.data.Cell;
@@ -32,8 +35,9 @@ import com.lxy.timetable.data.DeserializeResult;
 import com.lxy.timetable.data.MergeStates;
 import com.lxy.timetable.data.TimeTableData;
 import com.lxy.timetable.databinding.ActivityMainBinding;
+import com.lxy.timetable.enumset.OneEnumSet;
+import com.lxy.timetable.enumset.TwoEnumSet;
 import com.lxy.timetable.util.ArrayView;
-import com.lxy.timetable.contract.Contract;
 import com.lxy.timetable.util.CopyingInputStream;
 import com.lxy.timetable.util.DateUtil;
 import com.lxy.timetable.util.InstanceFieldAccessor;
@@ -57,14 +61,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.time.LocalDate;
 import java.util.AbstractList;
-import java.util.EnumSet;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import timber.log.Timber;
 
 public class MainActivity extends ComponentActivity {
-
     private static final int OFFSET = 1;
     private static final int REAL_ROW_COUNT = TimeTableData.ROW_COUNT;
     private static final int REAL_COLUMN_COUNT = TimeTableData.COLUMN_COUNT + OFFSET;
@@ -77,30 +78,63 @@ public class MainActivity extends ComponentActivity {
     @NonNull
     private static final String[] FILTER_MIME_ALL = {MIME_ALL};
     @NonNull
-    private static final String[] ROW_HEADER =
-            GlobalContext.getResource().getStringArray(R.array.row_header);
+    private static final InstanceFieldAccessor<TableMeasurer<Cell>> SmartTable_measurer
+            = InstanceFieldAccessor.of(SmartTable.class, "measurer");
     @NonNull
-    private static final String[] COLUMN_HEADER =
-            GlobalContext.getResource().getStringArray(R.array.column_header);
+    private static final InstanceFieldAccessor<TableConfig> SmartTable_config
+            = InstanceFieldAccessor.of(SmartTable.class, "config");
     @NonNull
-    private static final String[] ROW_TOOLTIP =
-            GlobalContext.getResource().getStringArray(R.array.row_tooltip);
+    private static final IntentFilter INTENT_FILTER = new IntentFilter(Intent.ACTION_TIME_CHANGED);
     @NonNull
-    private static final Path TIME_TABLE_DATA_PATH = FileSystems.getDefault().getPath(
-            GlobalContext.get().getFilesDir().getAbsolutePath(), TIME_TABLE_DATA_FILE_NAME);
+    private static final LinkOption[] EMPTY_LINK_OPTIONS = new LinkOption[0];
     @NonNull
-    private static final ArrayView<CellRange> MERGED_CELL_RANGES_VIEW = initialize(() -> {
-        final int CELL_RANGE_COUNT = TimeTableData.MAXIMUM_MERGED_ROWS * TimeTableData.COLUMN_COUNT;
+    private static final AccessMode[] ACCESS_READ = new AccessMode[]{AccessMode.READ};
+    @NonNull
+    private static final AccessMode[] ACCESS_WRITE = new AccessMode[]{AccessMode.WRITE};
+    @NonNull
+    private static final FileAttribute<?>[] EMPTY_FILE_ATTRIBUTES = new FileAttribute<?>[0];
+    @NonNull
+    private static final ActivityResultContracts.OpenDocument OPEN_DOCUMENT =
+            new ActivityResultContracts.OpenDocument();
+    @NonNull
+    private static final ActivityResultContracts.CreateDocument CREATE_DOCUMENT =
+            new ActivityResultContracts.CreateDocument(MIME_ALL);
+    @NonNull
+    private static final Set<StandardOpenOption> OPTIONS_READ =
+            new OneEnumSet<>(StandardOpenOption.READ);
+    @NonNull
+    private static final Set<StandardOpenOption> OPTIONS_CREATE_NEW =
+            new OneEnumSet<>(StandardOpenOption.CREATE_NEW);
+    @NonNull
+    private static final Set<StandardOpenOption> OPTIONS_WRITE_AND_CREATE =
+            new TwoEnumSet<>(StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+    @NonNull
+    private static final ArrayView<CellRange> MERGED_CELL_RANGES_VIEW;
+    @NonNull
+    private static final ArrayTableData<Cell> TIME_TABLE_DATA;
+    private static final float DIVIDER_WIDTH;
+    @NonNull
+    private static final String[] ROW_HEADER;
+    @NonNull
+    private static final String[] COLUMN_HEADER;
+    @NonNull
+    private static final String[] ROW_TOOLTIP;
+    @NonNull
+    private static final Path TIME_TABLE_DATA_PATH;
+    @NonNull
+    private static final TableConfig DEFAULT_TABLE_CONFIG;
+
+    static {
+        final var CELL_RANGE_COUNT = TimeTableData.MAXIMUM_MERGED_ROWS * TimeTableData.COLUMN_COUNT;
 
         var ranges = new CellRange[CELL_RANGE_COUNT];
         for (int i = 0; i < CELL_RANGE_COUNT; i++) {
             ranges[i] = new CellRange(0, 0, 0, 0);
         }
-        return new ArrayView<>(ranges, 0);
-    });
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @NonNull
-    private static final ArrayTableData<Cell> TIME_TABLE_DATA = initialize(() -> {
+        MERGED_CELL_RANGES_VIEW = new ArrayView<>(ranges, 0);
+    }
+
+    static {
         Column<String> column = new Column<>("", "");
         column.setDatas(new AbstractList<>() {
             @Override
@@ -122,7 +156,7 @@ public class MainActivity extends ComponentActivity {
                 TimeTableData.TIME_TABLE_DATA,
                 null);
         tableData.getColumns().add(0, column);
-        tableData.getArrayColumns().add(0, (Column<Cell>) (Column) column);
+        addColumn(tableData, column);
         tableData.setXSequenceFormat(new BaseSequenceFormat() {
             @Override
             public String format(Integer integer) {
@@ -130,22 +164,20 @@ public class MainActivity extends ComponentActivity {
             }
         });
         tableData.setUserCellRange(MERGED_CELL_RANGES_VIEW);
-        return tableData;
-    });
-    @NonNull
-    private static final InstanceFieldAccessor<TableMeasurer<Cell>> SmartTable_measurer
-            = InstanceFieldAccessor.of(SmartTable.class, "measurer");
-    @NonNull
-    private static final InstanceFieldAccessor<TableConfig> SmartTable_config
-            = InstanceFieldAccessor.of(SmartTable.class, "config");
-    private static final float DIVIDER_WIDTH =
-            GlobalContext.getResource().getDimension(R.dimen.divider_width);
-    @NonNull
-    private static final TableConfig DEFAULT_TABLE_CONFIG = initialize(() -> {
+        TIME_TABLE_DATA = tableData;
+    }
+
+    static {
         final int TEN_DP = 10;
 
         var context = GlobalContext.get();
         var resources = context.getResources();
+        DIVIDER_WIDTH = resources.getDimension(R.dimen.divider_width);
+        ROW_HEADER = resources.getStringArray(R.array.row_header);
+        COLUMN_HEADER = resources.getStringArray(R.array.column_header);
+        ROW_TOOLTIP = resources.getStringArray(R.array.row_tooltip);
+        TIME_TABLE_DATA_PATH = FileSystems.getDefault()
+                .getPath(context.getFilesDir().getAbsolutePath(), TIME_TABLE_DATA_FILE_NAME);
 
         var config = new TableConfig();
         config.dp10 = DensityUtils.dp2px(context, TEN_DP);
@@ -161,31 +193,8 @@ public class MainActivity extends ComponentActivity {
                 // Padding
                 .setHorizontalPadding(padding).setVerticalPadding(padding)
                 .setColumnTitleHorizontalPadding(padding).setColumnTitleVerticalPadding(padding);
-        return config;
-    });
-    @NonNull
-    private static final IntentFilter INTENT_FILTER = new IntentFilter(Intent.ACTION_TIME_CHANGED);
-    @NonNull
-    private static final LinkOption[] EMPTY_LINK_OPTIONS = new LinkOption[0];
-    @NonNull
-    private static final AccessMode[] ACCESS_READ = new AccessMode[]{AccessMode.READ};
-    @NonNull
-    private static final AccessMode[] ACCESS_WRITE = new AccessMode[]{AccessMode.WRITE};
-    @NonNull
-    private static final FileAttribute<?>[] EMPTY_FILE_ATTRIBUTES = new FileAttribute<?>[0];
-    @NonNull
-    private static final ActivityResultContracts.OpenDocument OPEN_DOCUMENT =
-            new ActivityResultContracts.OpenDocument();
-    @NonNull
-    private static final ActivityResultContracts.CreateDocument CREATE_DOCUMENT =
-            new ActivityResultContracts.CreateDocument(MIME_ALL);
-    @NonNull
-    private static final Set<StandardOpenOption> OPTIONS_READ = EnumSet.of(StandardOpenOption.READ);
-    @NonNull
-    private static final Set<StandardOpenOption> OPTIONS_CREATE_NEW = EnumSet.of(StandardOpenOption.CREATE_NEW);
-    @NonNull
-    private static final Set<StandardOpenOption> OPTIONS_WRITE_AND_CREATE =
-            EnumSet.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        DEFAULT_TABLE_CONFIG = config;
+    }
 
     static {
         if (BuildConfig.DEBUG) {
@@ -227,9 +236,9 @@ public class MainActivity extends ComponentActivity {
     };
     private TableMeasurer<Cell> tableMeasurer;
 
-    @NonNull
-    private static <T> T initialize(@NonNull Supplier<T> supplier) {
-        return Contract.requireNonNull(Contract.requireNonNull(supplier).get());
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void addColumn(@NonNull ArrayTableData<Cell> tableData, @NonNull Column<String> column) {
+        tableData.getArrayColumns().add(0, (Column<Cell>) (Column) column);
     }
 
     private static boolean checkFileAccess(@NonNull Path path, boolean readOrWrite) {
@@ -308,7 +317,21 @@ public class MainActivity extends ComponentActivity {
         });
         tableMeasurer = Contract.requireNonNull(SmartTable_measurer.get(smartTable));
         smartTable.setTableData(TIME_TABLE_DATA);
-        GlobalContext.registerBroadcastReceiver(receiver, INTENT_FILTER);
+        registerBroadcastReceiver();
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private void registerBroadcastReceiver() {
+        if (BuildConfig.DEBUG) {
+            Timber.d("Register new broadcast receiver");
+        }
+        var context = GlobalContext.get();
+        context.unregisterReceiver(receiver);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(receiver, INTENT_FILTER, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            context.registerReceiver(receiver, INTENT_FILTER);
+        }
     }
 
     private void tryOpenExternalTableFile() {
@@ -522,7 +545,7 @@ public class MainActivity extends ComponentActivity {
 
             @Nullable
             @Override
-            public InputStream openInputStream() throws IOException {
+            public InputStream openInputStream() {
                 try {
                     var inputStream = getContentResolver().openInputStream(result);
                     if (inputStream == null) {

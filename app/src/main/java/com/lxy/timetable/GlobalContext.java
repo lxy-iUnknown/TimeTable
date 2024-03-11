@@ -2,11 +2,8 @@ package com.lxy.timetable;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
@@ -18,7 +15,6 @@ import timber.log.Timber;
 public class GlobalContext extends Application {
     @SuppressLint("StaticFieldLeak")
     private static Context context = null;
-    private static BroadcastReceiver receiver;
 
     static {
         if (BuildConfig.DEBUG) {
@@ -32,25 +28,6 @@ public class GlobalContext extends Application {
             return Contract.requireNonNull(context);
         }
         return context;
-    }
-
-    public static void registerBroadcastReceiver(@NonNull BroadcastReceiver broadcastReceiver,
-                                                 @NonNull IntentFilter filter) {
-        if (BuildConfig.DEBUG) {
-            Timber.d("Register new broadcast receiver");
-        }
-        var context = get();
-        if (receiver != null) {
-            if (BuildConfig.DEBUG) {
-                Timber.d("Clean up old broadcast receiver");
-            }
-            context.unregisterReceiver(receiver);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(Contract.requireNonNull(broadcastReceiver),
-                    Contract.requireNonNull(filter), Context.RECEIVER_NOT_EXPORTED);
-        }
-        receiver = broadcastReceiver;
     }
 
     @NonNull

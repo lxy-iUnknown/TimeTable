@@ -23,7 +23,7 @@ public class InstanceFieldAccessor<T> {
     }
 
     @NonNull
-    public static <T>InstanceFieldAccessor<T> of(
+    public static <T> InstanceFieldAccessor<T> of(
             @NonNull Class<?> clazz, @NonNull String name) {
         try {
             return new InstanceFieldAccessor<>(clazz.getDeclaredField(name));
