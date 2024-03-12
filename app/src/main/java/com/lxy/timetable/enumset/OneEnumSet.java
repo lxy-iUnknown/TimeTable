@@ -8,6 +8,7 @@ import com.lxy.timetable.contract.Contract;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
@@ -19,7 +20,11 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
     }
 
     private boolean containsImpl(@Nullable Object o) {
-        return o == e;
+        return e.equals(o);
+    }
+
+    private boolean equalsImpl(@NonNull Collection<?> c) {
+        return containsImpl(c.iterator().next());
     }
 
     @NonNull
@@ -28,13 +33,10 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
         return new SetIterator<>(e);
     }
 
-    @SuppressWarnings("unchecked")
     @NonNull
     @Override
     public Object[] toArray() {
-        var array = (E[]) Array.newInstance(e.getClass(), 1);
-        array[0] = e;
-        return array;
+        return new Object[]{e};
     }
 
     @SuppressWarnings({"unchecked", "DataFlowIssue"})
@@ -53,7 +55,7 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
         if (c.size() != 1) {
             return false;
         }
-        return containsImpl(c.iterator().next());
+        return equalsImpl(c);
     }
 
     @Override
@@ -74,6 +76,14 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
     @Override
     public int hashCode() {
         return e.hashCode();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj instanceof Set<?> set) {
+            return set.size() == 1 && equalsImpl(set);
+        }
+        return false;
     }
 
     private static class SetIterator<T> implements Iterator<T> {

@@ -325,13 +325,17 @@ public class MainActivity extends ComponentActivity {
         if (BuildConfig.DEBUG) {
             Timber.d("Register new broadcast receiver");
         }
-        var context = GlobalContext.get();
-        context.unregisterReceiver(receiver);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, INTENT_FILTER, Context.RECEIVER_NOT_EXPORTED);
+            registerReceiver(receiver, INTENT_FILTER, Context.RECEIVER_NOT_EXPORTED);
         } else {
-            context.registerReceiver(receiver, INTENT_FILTER);
+            registerReceiver(receiver, INTENT_FILTER);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(receiver);
     }
 
     private void tryOpenExternalTableFile() {

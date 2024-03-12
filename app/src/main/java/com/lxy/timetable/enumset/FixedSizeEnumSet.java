@@ -67,18 +67,4 @@ public abstract class FixedSizeEnumSet<E extends Enum<E>> implements Set<E> {
         readOnly();
         return false;
     }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (obj instanceof Set<?> set) {
-            return containsAll(set);
-        }
-        return false;
-    }
-
-    @NonNull
-    @Override
-    protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
 }
