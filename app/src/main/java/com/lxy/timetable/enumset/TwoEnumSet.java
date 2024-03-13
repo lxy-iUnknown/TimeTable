@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 
 import com.lxy.timetable.BuildConfig;
 import com.lxy.timetable.contract.Contract;
+import com.lxy.timetable.util.HashUtil;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -87,9 +88,7 @@ public class TwoEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
 
     @Override
     public int hashCode() {
-        var PRIME = 31;
-
-        return PRIME * PRIME + PRIME * e1.hashCode() + e2.hashCode();
+        return HashUtil.mix(e1.hashCode(), e2.hashCode());
     }
 
     @Override

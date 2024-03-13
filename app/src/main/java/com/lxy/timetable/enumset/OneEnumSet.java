@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.lxy.timetable.contract.Contract;
+import com.lxy.timetable.util.HashUtil;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -75,7 +76,7 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
 
     @Override
     public int hashCode() {
-        return e.hashCode();
+        return HashUtil.mix(e.hashCode());
     }
 
     @Override
