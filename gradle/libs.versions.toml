@@ -1,0 +1,16 @@
+[versions]
+agp = "8.3.0"
+activity = "1.8.2"
+smartTable = "master"
+timber = "5.0.1"
+kotlinBom = "1.9.23"
+
+[libraries]
+activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+smartTable = { group = "com.github.huangyanbin", name = "smartTable", version.ref = "smartTable" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlinBom" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+

@@ -87,7 +87,9 @@ class MergeStates {
     }
 }
 
-apply plugin: 'com.android.application'
+plugins {
+    alias(libs.plugins.androidApplication)
+}
 
 android {
     compileSdk 34
@@ -111,7 +113,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.myapplication"
-        minSdkVersion 28
+        minSdkVersion 26
         targetSdkVersion 34
         versionCode 1
         versionName "1.0"
@@ -154,9 +156,9 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.activity:activity:1.8.2'
-    implementation 'com.github.huangyanbin:smartTable:master'
-    implementation 'com.jakewharton.timber:timber:5.0.1'
+    implementation libs.activity
+    implementation libs.smartTable
+    implementation libs.timber
     // https://stackoverflow.com/questions/75712899/duplicate-class-kotlin-random-jdk8-found-in-modules-jetified-kotlin-stdlib-1-8-1
-    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.0')
+    implementation platform(libs.kotlin.bom)
 }

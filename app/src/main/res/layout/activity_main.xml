@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <RelativeLayout
+        android:id="@+id/activity_main"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
