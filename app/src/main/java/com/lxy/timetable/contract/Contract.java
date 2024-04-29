@@ -46,13 +46,15 @@ public class Contract {
         return failInternal(message, cause);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     @NonNull
     public static <T> T fail(@NonNull String message, Object... args) {
         return fail(message, null, args);
     }
 
+    @SuppressWarnings("unused")
     @NonNull
-    public static <T> T unreachable(String message, int value) {
+    public static <T> T fail(String message, int value) {
         return fail(message + value);
     }
 

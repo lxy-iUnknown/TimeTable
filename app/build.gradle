@@ -21,7 +21,7 @@ class MergeStates {
 
         void serialize(OutputStream stream) {
             stream.write(length)
-            for (int i = 0; i < MAXIMUM_MERGED_ROW; i++) {
+            for (var i = 0; i < MAXIMUM_MERGED_ROW; i++) {
                 var mergedRow = rows[i]
                 byte firstRow, lastRow
                 if (mergedRow != null) {
@@ -65,7 +65,7 @@ class MergeStates {
     }
 
     static void compute(OutputStream stream) {
-        for (int i = 0; i <= MAXIMUM_MERGED_ROWS; i++) {
+        for (var i = 0; i <= MAXIMUM_MERGED_ROWS; i++) {
             MergedRows mergedRows = new MergedRows()
             var value = (i << 1) as short
             for (; ; ) {

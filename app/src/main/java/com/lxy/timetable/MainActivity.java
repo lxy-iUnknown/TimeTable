@@ -46,6 +46,7 @@ import com.lxy.timetable.util.ArrayView;
 import com.lxy.timetable.util.CopyingInputStream;
 import com.lxy.timetable.util.DateUtil;
 import com.lxy.timetable.util.InstanceFieldAccessor;
+import com.lxy.timetable.util.TimeTableFileHandler;
 import com.lxy.timetable.util.ToastUtil;
 
 import java.io.FileNotFoundException;
@@ -133,7 +134,7 @@ public class MainActivity extends ComponentActivity {
         final var CELL_RANGE_COUNT = TimeTableData.MAXIMUM_MERGED_ROWS * TimeTableData.COLUMN_COUNT;
 
         var ranges = new CellRange[CELL_RANGE_COUNT];
-        for (int i = 0; i < CELL_RANGE_COUNT; i++) {
+        for (var i = 0; i < CELL_RANGE_COUNT; i++) {
             ranges[i] = new CellRange(0, 0, 0, 0);
         }
         MERGED_CELL_RANGES_VIEW = new ArrayView<>(ranges, 0);
@@ -305,7 +306,7 @@ public class MainActivity extends ComponentActivity {
             }
             var format = new MultiLineDrawFormat<>(
                     (int) (restWidth / TimeTableData.COLUMN_COUNT));
-            for (int i = 0; i < TimeTableData.COLUMN_COUNT; i++) {
+            for (var i = 0; i < TimeTableData.COLUMN_COUNT; i++) {
                 columns.get(i + OFFSET).setDrawFormat(format);
             }
             smartTable.getConfig().setMinTableWidth(tableWidth);
@@ -362,7 +363,7 @@ public class MainActivity extends ComponentActivity {
                 .show();
     }
 
-    private void openTimeTableFile(@NonNull OpenTimeTableFileHandler handler) {
+    private void openTimeTableFile(@NonNull TimeTableFileHandler handler) {
         Contract.requireNonNull(handler);
         if (BuildConfig.DEBUG) {
             Timber.d("Open timetable file");
@@ -404,7 +405,7 @@ public class MainActivity extends ComponentActivity {
             }
             return;
         }
-        openTimeTableFile(new OpenTimeTableFileHandler() {
+        openTimeTableFile(new TimeTableFileHandler() {
             @Nullable
             @Override
             public InputStream openInputStream() throws IOException {
@@ -504,9 +505,9 @@ public class MainActivity extends ComponentActivity {
         var tableData = TIME_TABLE_DATA;
         int length = 0;
         var ranges = view.getArray();
-        for (int column = 0; column < TimeTableData.COLUMN_COUNT; column++) {
+        for (var column = 0; column < TimeTableData.COLUMN_COUNT; column++) {
             var mergeStates = new MergeStates(TimeTableData.MERGE_STATES[column]);
-            for (int index = 0; index < mergeStates.getCount(); index++) {
+            for (var index = 0; index < mergeStates.getCount(); index++) {
                 var realColumn = column + OFFSET;
                 var range = ranges[length++];
                 var mergedRow = mergeStates.get(index);
@@ -555,7 +556,7 @@ public class MainActivity extends ComponentActivity {
         if (BuildConfig.DEBUG) {
             Timber.d("Timetable file location: \"%s\"", result);
         }
-        openTimeTableFile(new OpenTimeTableFileHandler() {
+        openTimeTableFile(new TimeTableFileHandler() {
             private CopyingInputStream stream;
 
             @Nullable
@@ -652,16 +653,5 @@ public class MainActivity extends ComponentActivity {
                 Timber.e(e, "Save timetable data file failed");
             }
         }
-    }
-
-    private interface OpenTimeTableFileHandler {
-        @Nullable
-        InputStream openInputStream() throws IOException;
-
-        boolean reallySucceeded();
-
-        void fileNotFound();
-
-        void failed();
     }
 }

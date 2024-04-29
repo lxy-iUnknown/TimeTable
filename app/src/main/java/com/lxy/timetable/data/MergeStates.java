@@ -87,7 +87,7 @@ public class MergeStates {
             return sb.append(']').toString();
         }
         var mergeState = MERGE_STATE;
-        for (int i = 0; ; i++) {
+        for (var i = 0; ; i++) {
             var startIndex = computeStartIndex(i);
             sb.append('{')
                     .append(mergeState[startIndex])

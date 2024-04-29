@@ -73,7 +73,7 @@ public class TimeTableData {
             return "[]";
         }
         var sb = new StringBuilder("[");
-        for (int i = 0; ; i++) {
+        for (var i = 0; ; i++) {
             sb.append(Byte.toUnsignedInt(array[i]));
             if (i == max) {
                 return sb.append(']').toString();
@@ -170,7 +170,7 @@ public class TimeTableData {
 
     private static void writeLittleEndianCharArray(@NonNull ByteArrayAppender appender,
                                                    @NonNull char[] array, int length) {
-        for (int i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             var ch = array[i];
             appender.append(ch);
             appender.append(ch >> 8);
@@ -222,8 +222,8 @@ public class TimeTableData {
 
     public static void clear() {
         clearBeginDate();
-        for (int row = 0; row < ROW_COUNT; row++) {
-            for (int column = 0; column < COLUMN_COUNT; column++) {
+        for (var row = 0; row < ROW_COUNT; row++) {
+            for (var column = 0; column < COLUMN_COUNT; column++) {
                 TIME_TABLE_DATA[column][row].clear();
             }
         }
@@ -237,8 +237,8 @@ public class TimeTableData {
         }
         var buffer = new ByteArrayAppender(ESTIMATED_FILE_SIZE);
         writeLittleEndianInt(buffer, BEGIN_DATE);
-        for (int row = 0; row < ROW_COUNT; row++) {
-            for (int column = 0; column < COLUMN_COUNT; column++) {
+        for (var row = 0; row < ROW_COUNT; row++) {
+            for (var column = 0; column < COLUMN_COUNT; column++) {
                 serializeCell(buffer, TIME_TABLE_DATA[column][row]);
             }
         }
@@ -263,7 +263,7 @@ public class TimeTableData {
                 return DeserializeResult.INVALID_FILE;
             }
             var cells = new Cell[CELL_COUNT];
-            for (int i = 0; i < CELL_COUNT; i++) {
+            for (var i = 0; i < CELL_COUNT; i++) {
                 var cell = deserializeCell(stream);
                 if (BuildConfig.DEBUG) {
                     Timber.d("Deserialized cell %d, odd: \"%s\", even: \"%s\"", i + 1, cell.getOdd(), cell.getEven());
@@ -271,7 +271,7 @@ public class TimeTableData {
                 cells[i] = cell;
             }
             var mergeStates = new char[COLUMN_COUNT];
-            for (int i = 0; i < COLUMN_COUNT; i++) {
+            for (var i = 0; i < COLUMN_COUNT; i++) {
                 var mergeState = readLittleEndianChar(stream);
                 if (mergeState > MAXIMUM_MERGED_ROWS) {
                     if (BuildConfig.DEBUG) {
@@ -281,8 +281,8 @@ public class TimeTableData {
                 }
                 mergeStates[i] = mergeState;
             }
-            for (int row = 0; row < ROW_COUNT; row++) {
-                for (int column = 0; column < COLUMN_COUNT; column++) {
+            for (var row = 0; row < ROW_COUNT; row++) {
+                for (var column = 0; column < COLUMN_COUNT; column++) {
                     TIME_TABLE_DATA[column][row].copyFrom(cells[row * TimeTableData.COLUMN_COUNT + column]);
                 }
             }
