@@ -124,8 +124,6 @@ android {
 
         buildConfigField 'long', 'MIN_DATE', "${MIN.toEpochDay()}"
         buildConfigField 'long', 'MAX_DATE', "${MAX.toEpochDay()}"
-
-        println file('key.jks')
     }
 
     signingConfigs {
