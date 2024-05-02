@@ -124,13 +124,32 @@ android {
 
         buildConfigField 'long', 'MIN_DATE', "${MIN.toEpochDay()}"
         buildConfigField 'long', 'MAX_DATE', "${MAX.toEpochDay()}"
+
+        println file('key.jks')
+    }
+
+    signingConfigs {
+        config {
+            keyAlias 'lxy'
+            keyPassword '123456'
+            storeFile file('key.jks')
+            storePassword '123456'
+            enableV2Signing true
+            enableV3Signing true
+            enableV4Signing true
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.config
+        }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.config
         }
     }
 
