@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="background_color">#000000</color>
+    <color name="text_color">#FFFFFF</color>
     <color name="divider_color">@android:color/holo_blue_light</color>
 </resources>
