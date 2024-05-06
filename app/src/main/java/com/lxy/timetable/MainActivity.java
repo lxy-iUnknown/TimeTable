@@ -203,22 +203,23 @@ public class MainActivity extends ComponentActivity {
     }
 
     static {
+        Contract.requireOperation(
+                new Value<>("rowHeaderLength", ROW_HEADER.length),
+                new Value<>("rowCount", REAL_ROW_COUNT),
+                Operator.EQ
+        );
+        Contract.requireOperation(
+                new Value<>("columnHeaderLength", COLUMN_HEADER.length),
+                new Value<>("columnCount", REAL_COLUMN_COUNT),
+                Operator.EQ
+        );
+        Contract.requireOperation(
+                new Value<>("rowToolTipLength", ROW_TOOLTIP.length),
+                new Value<>("rowCount", REAL_ROW_COUNT),
+                Operator.EQ
+        );
         if (BuildConfig.DEBUG) {
-            Contract.requireOperation(
-                    new Value<>("rowHeaderLength", ROW_HEADER.length),
-                    new Value<>("rowCount", REAL_ROW_COUNT),
-                    Operator.EQ
-            );
-            Contract.requireOperation(
-                    new Value<>("columnHeaderLength", COLUMN_HEADER.length),
-                    new Value<>("columnCount", REAL_COLUMN_COUNT),
-                    Operator.EQ
-            );
-            Contract.requireOperation(
-                    new Value<>("rowToolTipLength", ROW_TOOLTIP.length),
-                    new Value<>("rowCount", REAL_ROW_COUNT),
-                    Operator.EQ
-            );
+
             Timber.d("Table data file: \"%s\"", TIME_TABLE_DATA_PATH);
         }
     }

@@ -29,12 +29,12 @@ public class ArrayView<T> extends AbstractList<T> {
 
     @Override
     public T get(int index) {
-        Contract.validateIndex(index, length);
+        Contract.requireValidIndex(index, length);
         return array[index];
     }
 
     public void setLength(int length) {
-        Contract.validateLength(length, array.length);
+        Contract.requireValidIndex(length, array.length);
         this.length = length;
     }
 

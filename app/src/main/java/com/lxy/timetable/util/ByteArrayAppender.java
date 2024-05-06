@@ -2,7 +2,6 @@ package com.lxy.timetable.util;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.BuildConfig;
 import com.lxy.timetable.contract.Contract;
 import com.lxy.timetable.contract.Operator;
 import com.lxy.timetable.contract.Value;
@@ -13,9 +12,7 @@ public class ByteArrayAppender {
     private int count;
 
     public ByteArrayAppender(int size) {
-        if (BuildConfig.DEBUG) {
-            Contract.requireOperation(new Value<>("size", size), Value.ZERO_I, Operator.GE);
-        }
+        Contract.requireOperation(new Value<>("size", size), Value.ZERO_I, Operator.GE);
         buffer = new byte[size];
     }
 
@@ -45,9 +42,9 @@ public class ByteArrayAppender {
         if (size == 0) {
             return;
         }
-        Contract.validateIndex(offset, buffer.length);
+        Contract.requireValidIndex(offset, buffer.length);
         // This will fail when size == 0
-        Contract.validateIndex(offset + size - 1, buffer.length);
+        Contract.requireValidIndex(offset + size - 1, buffer.length);
         ensureCapacity(count + size);
         System.arraycopy(Contract.requireNonNull(buffer), offset, this.buffer, count, size);
         count += size;

@@ -26,10 +26,8 @@ public class MergeStates {
             try (var stream = GlobalContext.get().getResources().openRawResource(R.raw.merged_rows)) {
                 state = new byte[SIZE];
                 var result = stream.read(state, 0, SIZE);
-                if (BuildConfig.DEBUG) {
-                    Contract.requireOperation(new Value<>("result", result),
-                            new Value<>(SIZE), Operator.EQ);
-                }
+                Contract.requireOperation(new Value<>("result", result),
+                        new Value<>(SIZE), Operator.EQ);
             }
         } catch (IOException e) {
             state = Contract.fail("Cannot load merged states", e);
@@ -41,7 +39,7 @@ public class MergeStates {
     private final byte count;
 
     public MergeStates(char mergedRowsIndex) {
-        Contract.validateIndex(mergedRowsIndex, TimeTableData.MAXIMUM_MERGED_ROWS);
+        Contract.requireValidIndex(mergedRowsIndex, TimeTableData.MAXIMUM_MERGED_ROWS);
         var mergedRowsStartIndex = mergedRowsIndex * MERGE_ROWS_STRIDE;
         this.count = MERGE_STATE[mergedRowsStartIndex];
         this.mergedRowsStartIndex = mergedRowsIndex;
@@ -64,7 +62,7 @@ public class MergeStates {
     }
 
     public char get(int mergedRowIndex) {
-        Contract.validateIndex(mergedRowIndex, count);
+        Contract.requireValidIndex(mergedRowIndex, count);
         var start = computeStartIndex(mergedRowIndex);
         return (char) ((MERGE_STATE[start] << 8) | Byte.toUnsignedInt(MERGE_STATE[start + 1]));
     }

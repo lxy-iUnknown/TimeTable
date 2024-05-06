@@ -67,7 +67,7 @@ public class TimeTableData {
 
     @NonNull
     private static String arrayToString(@NonNull byte[] array, int length) {
-        Contract.validateLength(length, array.length);
+        Contract.requireValidIndex(length, array.length);
         var max = length - 1;
         if (max == -1) {
             return "[]";
@@ -155,13 +155,11 @@ public class TimeTableData {
         Contract.requireNonNull(appender);
         Contract.requireNonNull(value);
         var length = value.length();
-        if (BuildConfig.DEBUG) {
-            Contract.requireOperation(
-                    new Value<>("length", length),
-                    new Value<>(TimeTableData.MAX_STRING_LENGTH),
-                    Operator.LE
-            );
-        }
+        Contract.requireOperation(
+                new Value<>("length", length),
+                new Value<>(TimeTableData.MAX_STRING_LENGTH),
+                Operator.LE
+        );
         appender.append(length);
         var charBuffer = CHAR_BUFFER;
         value.getChars(0, length, charBuffer, 0);
@@ -199,12 +197,12 @@ public class TimeTableData {
     }
 
     public static void validateRowIndex(int row) {
-        Contract.validateIndex(row, ROW_COUNT);
+        Contract.requireValidIndex(row, ROW_COUNT);
     }
 
     @SuppressWarnings("unused")
     public static void validateColumnIndex(int column) {
-        Contract.validateIndex(column, COLUMN_COUNT);
+        Contract.requireValidIndex(column, COLUMN_COUNT);
     }
 
     public static long beginDate() {
