@@ -40,7 +40,7 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
         return new Object[]{e};
     }
 
-    @SuppressWarnings({"unchecked", "DataFlowIssue"})
+    @SuppressWarnings({"unchecked"})
     @NonNull
     @Override
     public <T> T[] toArray(@NonNull T[] a) {
@@ -57,6 +57,19 @@ public class OneEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
             return false;
         }
         return equalsImpl(c);
+    }
+
+    @Override
+    public boolean retainAll(@NonNull Collection<?> c) {
+        for (var item: c) {
+            if (item.equals(e)) {
+                // This set remain unmodified
+                return false;
+            }
+        }
+        // This set should be modified
+        readOnly();
+        return true;
     }
 
     @Override

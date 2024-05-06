@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public abstract class FixedSizeEnumSet<E extends Enum<E>> implements Set<E> {
-    private static void readOnly() {
+    protected static void readOnly() {
         if (BuildConfig.DEBUG) {
             Contract.fail("Read-only set");
         }
@@ -36,12 +36,6 @@ public abstract class FixedSizeEnumSet<E extends Enum<E>> implements Set<E> {
 
     @Override
     public boolean addAll(@NonNull Collection<? extends E> c) {
-        readOnly();
-        return false;
-    }
-
-    @Override
-    public boolean retainAll(@NonNull Collection<?> c) {
         readOnly();
         return false;
     }

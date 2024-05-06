@@ -19,7 +19,7 @@ public class TwoEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
 
     public TwoEnumSet(@NonNull E e1, @NonNull E e2) {
         if (BuildConfig.DEBUG) {
-            Contract.require(e1.equals(e2), "Duplicate item found");
+            Contract.require(!e1.equals(e2), "Duplicate item found");
         }
         this.e1 = Contract.requireNonNull(e1);
         this.e2 = Contract.requireNonNull(e2);
@@ -37,6 +37,25 @@ public class TwoEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
                 (this.e1.equals(e2) && this.e2.equals(e1));
     }
 
+    @Override
+    public boolean retainAll(@NonNull Collection<?> c) {
+        boolean hasE1 = false, hasE2 = false;
+        for (var item: c) {
+            if (!hasE1 && item.equals(e1)) {
+                hasE1 = true;
+            } else if (!hasE2 && item.equals(e2)) {
+                hasE2 = true;
+            }
+            if (hasE1 && hasE2) {
+                // This set remain unmodified
+                return false;
+            }
+        }
+        // This set should be modified
+        readOnly();
+        return true;
+    }
+
     @NonNull
     @Override
     public Iterator<E> iterator() {
@@ -49,7 +68,7 @@ public class TwoEnumSet<E extends Enum<E>> extends FixedSizeEnumSet<E> {
         return new Object[]{e1, e2};
     }
 
-    @SuppressWarnings({"unchecked", "DataFlowIssue"})
+    @SuppressWarnings({"unchecked"})
     @NonNull
     @Override
     public <T> T[] toArray(@NonNull T[] a) {

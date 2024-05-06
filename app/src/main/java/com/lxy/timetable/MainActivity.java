@@ -31,7 +31,6 @@ import com.bin.david.form.data.format.sequence.BaseSequenceFormat;
 import com.bin.david.form.data.style.FontStyle;
 import com.bin.david.form.data.style.LineStyle;
 import com.bin.david.form.data.table.ArrayTableData;
-import com.bin.david.form.utils.DensityUtils;
 import com.lxy.timetable.contract.Contract;
 import com.lxy.timetable.contract.Operator;
 import com.lxy.timetable.contract.Value;
@@ -77,6 +76,7 @@ public class MainActivity extends ComponentActivity {
     private static final int REAL_COLUMN_COUNT = TimeTableData.COLUMN_COUNT + OFFSET;
     @SuppressWarnings("unused")
     private static final int REAL_CELL_COUNT = REAL_ROW_COUNT * REAL_COLUMN_COUNT;
+    private static final int SYSTEM_BARS = WindowInsetsCompat.Type.systemBars();
     @NonNull
     private static final String TIME_TABLE_DATA_FILE_NAME = "TimeTable.bin";
     @NonNull
@@ -118,7 +118,7 @@ public class MainActivity extends ComponentActivity {
     private static final ArrayView<CellRange> MERGED_CELL_RANGES_VIEW;
     @NonNull
     private static final ArrayTableData<Cell> TIME_TABLE_DATA;
-    private static final float DIVIDER_WIDTH;
+    private static final int TABLE_WIDTH_DELTA;
     @NonNull
     private static final String[] ROW_HEADER;
     @NonNull
@@ -174,22 +174,12 @@ public class MainActivity extends ComponentActivity {
     }
 
     static {
-        final int TEN_DP = 10;
-
         var context = GlobalContext.get();
         var resources = context.getResources();
-        DIVIDER_WIDTH = resources.getDimension(R.dimen.divider_width);
-        ROW_HEADER = resources.getStringArray(R.array.row_header);
-        COLUMN_HEADER = resources.getStringArray(R.array.column_header);
-        ROW_TOOLTIP = resources.getStringArray(R.array.row_tooltip);
-        TIME_TABLE_DATA_PATH = FileSystems.getDefault()
-                .getPath(context.getFilesDir().getAbsolutePath(), TIME_TABLE_DATA_FILE_NAME);
-
+        var dividerWidthPx = resources.getDimensionPixelSize(R.dimen.divider_width);
         var config = new TableConfig();
-        config.dp10 = DensityUtils.dp2px(context, TEN_DP);
-        var padding = (int) resources.getDimension(R.dimen.padding);
-        var lineStyle = new LineStyle(
-                DIVIDER_WIDTH, context.getColor(R.color.divider_color));
+        var paddingPx = resources.getDimensionPixelSize(R.dimen.padding);
+        var lineStyle = new LineStyle(dividerWidthPx, context.getColor(R.color.divider_color));
         // Title
         config.setShowColumnTitle(false).setShowTableTitle(false).setShowXSequence(true).setShowYSequence(false)
                 // Fixed
@@ -197,9 +187,24 @@ public class MainActivity extends ComponentActivity {
                 // Line style
                 .setContentGridStyle(lineStyle).setColumnTitleGridStyle(lineStyle).setSequenceGridStyle(lineStyle)
                 // Padding
-                .setHorizontalPadding(padding).setVerticalPadding(padding)
-                .setColumnTitleHorizontalPadding(padding).setColumnTitleVerticalPadding(padding);
+                .setHorizontalPadding(paddingPx).setVerticalPadding(paddingPx);
+
         DEFAULT_TABLE_CONFIG = config;
+
+        if (BuildConfig.DEBUG) {
+            Timber.d("Divider width: %dpx", dividerWidthPx);
+            Timber.d("Padding: %dpx", paddingPx);
+        }
+        TABLE_WIDTH_DELTA = paddingPx +
+                (TimeTableData.COLUMN_COUNT + 1) * (dividerWidthPx + 1) +
+                TimeTableData.COLUMN_COUNT * paddingPx * 2;
+
+        ROW_HEADER = resources.getStringArray(R.array.row_header);
+        COLUMN_HEADER = resources.getStringArray(R.array.column_header);
+        ROW_TOOLTIP = resources.getStringArray(R.array.row_tooltip);
+
+        TIME_TABLE_DATA_PATH = FileSystems.getDefault()
+                .getPath(context.getFilesDir().getAbsolutePath(), TIME_TABLE_DATA_FILE_NAME);
     }
 
     static {
@@ -273,14 +278,13 @@ public class MainActivity extends ComponentActivity {
         EdgeToEdge.enable(this);
         binding = DataBindingUtil.setContentView(
                 this, R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.activity_main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMain, (v, insets) -> {
+            Insets systemBars = insets.getInsets(SYSTEM_BARS);
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
         initializeTimeTable();
         initializeBinding();
-        remeasureTable();
         openInternalTimeTableFile();
     }
 
@@ -292,25 +296,24 @@ public class MainActivity extends ComponentActivity {
         var smartTable = getSmartTable();
         smartTable.post(() -> {
             var columns = TIME_TABLE_DATA.getColumns();
-            var tableWidth = smartTable.getMeasuredWidth();
+            var tableWidth = smartTable.getWidth();
+            var config = smartTable.getConfig();
             if (BuildConfig.DEBUG) {
-                Timber.d("Table measured width: %d", tableWidth);
+                Timber.d("Table width: %dpx", tableWidth);
             }
             var firstColumnWidth = columns.get(0).getComputeWidth();
             if (BuildConfig.DEBUG) {
-                Timber.d("First column width: %d", firstColumnWidth);
+                Timber.d("First column width: %dpx", firstColumnWidth);
             }
-            var restWidth = (tableWidth - firstColumnWidth -
-                    (TimeTableData.COLUMN_COUNT + 1) * (DIVIDER_WIDTH + 1));
+            var restWidth = tableWidth - firstColumnWidth - TABLE_WIDTH_DELTA;
             if (BuildConfig.DEBUG) {
-                Timber.d("Rest width: %f", restWidth);
+                Timber.d("Rest width: %dpx", restWidth);
             }
-            var format = new MultiLineDrawFormat<>(
-                    (int) (restWidth / TimeTableData.COLUMN_COUNT));
+            var format = new MultiLineDrawFormat<>(restWidth / TimeTableData.COLUMN_COUNT);
             for (var i = 0; i < TimeTableData.COLUMN_COUNT; i++) {
                 columns.get(i + OFFSET).setDrawFormat(format);
             }
-            smartTable.getConfig().setMinTableWidth(tableWidth);
+            config.setMinTableWidth(tableWidth);
             remeasure();
         });
     }
@@ -381,6 +384,7 @@ public class MainActivity extends ComponentActivity {
                         if (handler.reallySucceeded()) {
                             ToastUtil.toast(R.string.open_time_table_file_succeeded);
                             openTimeTableSucceed();
+                            return;
                         } else {
                             TimeTableData.clear();
                         }
@@ -395,8 +399,8 @@ public class MainActivity extends ComponentActivity {
             }
         } catch (IOException e) {
             handleIOException(e);
-            handler.failed();
         }
+        handler.failed();
     }
 
     private void openInternalTimeTableFile() {
@@ -407,6 +411,12 @@ public class MainActivity extends ComponentActivity {
             return;
         }
         openTimeTableFile(new TimeTableFileHandler() {
+            private static void internalTimeTableFileNotFound() {
+                if (BuildConfig.DEBUG) {
+                    Timber.e("Internal time table file not found");
+                }
+            }
+
             @Nullable
             @Override
             public InputStream openInputStream() throws IOException {
@@ -416,20 +426,17 @@ public class MainActivity extends ComponentActivity {
                         return Channels.newInputStream(Files.newByteChannel(
                                 path, OPTIONS_READ, EMPTY_FILE_ATTRIBUTES));
                     } else {
-                        if (BuildConfig.DEBUG) {
-                            Timber.e("External time table file not found");
-                        }
+                        internalTimeTableFileNotFound();
                     }
                 } catch (NoSuchFileException | DirectoryNotEmptyException e) {
-                    if (BuildConfig.DEBUG) {
-                        Timber.e(e, "External time table file not found");
-                    }
+                    internalTimeTableFileNotFound();
                 }
                 return null;
             }
 
             @Override
             public boolean reallySucceeded() {
+                remeasureTable();
                 return true;
             }
 
@@ -580,35 +587,39 @@ public class MainActivity extends ComponentActivity {
                         Timber.d(e, "Open external timetable data file not found");
                     }
                 }
+                remeasureTable();
                 return null;
             }
 
             @Override
             public boolean reallySucceeded() {
+                boolean result;
                 try (var outputChannel = Files.newByteChannel(
                         TIME_TABLE_DATA_PATH, OPTIONS_WRITE_AND_CREATE, EMPTY_FILE_ATTRIBUTES)) {
                     if (BuildConfig.DEBUG) {
                         Timber.d("File size: %d", stream.size());
                     }
                     outputChannel.write(ByteBuffer.wrap(stream.buffer(), 0, stream.size()));
-                    return true;
+                    result = true;
                 } catch (IOException e) {
                     if (BuildConfig.DEBUG) {
                         Timber.d(e, "Write internal timetable data file failed");
                     }
                     ToastUtil.toast(R.string.save_time_table_file_to_internal_storage_failed);
-                    return false;
+                    result = false;
                 }
+                remeasureTable();
+                return result;
             }
 
             @Override
             public void fileNotFound() {
-
+                remeasureTable();
             }
 
             @Override
             public void failed() {
-
+                remeasureTable();
             }
         });
     }
