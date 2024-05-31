@@ -1,4 +1,4 @@
-package com.lxy.timetable;
+package com.lxy.termdate;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
@@ -8,7 +8,7 @@ import android.content.res.Resources;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 
-import com.lxy.timetable.contract.Contract;
+import com.lxy.termdate.contract.Contract;
 
 import timber.log.Timber;
 

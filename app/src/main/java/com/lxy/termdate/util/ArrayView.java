@@ -1,8 +1,8 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.contract.Contract;
+import com.lxy.termdate.contract.Contract;
 
 import java.util.AbstractList;
 
@@ -49,7 +49,7 @@ public class ArrayView<T> extends AbstractList<T> {
         // com.bin.david.form.core.SmartTable.release ->
         // com.bin.david.form.data.table.TableData.clear ->
         // userSetRangeAddress.clear ->
-        // com.lxy.timetable.MainActivity$ArrayView.clear
+        // com.lxy.termdate.MainActivity$ArrayView.clear
         length = 0;
     }
 }

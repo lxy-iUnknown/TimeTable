@@ -25,5 +25,5 @@ dependencyResolutionManagement {
         maven { url = 'https://www.jitpack.io' }
     }
 }
-rootProject.name = "TimeTable"
+rootProject.name = "TermDate"
 include ':app'

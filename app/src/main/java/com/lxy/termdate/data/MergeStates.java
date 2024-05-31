@@ -1,25 +1,25 @@
-package com.lxy.timetable.data;
+package com.lxy.termdate.data;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.BuildConfig;
-import com.lxy.timetable.GlobalContext;
-import com.lxy.timetable.R;
-import com.lxy.timetable.contract.Contract;
-import com.lxy.timetable.contract.Operator;
-import com.lxy.timetable.contract.Value;
+import com.lxy.termdate.BuildConfig;
+import com.lxy.termdate.GlobalContext;
+import com.lxy.termdate.R;
+import com.lxy.termdate.contract.Contract;
+import com.lxy.termdate.contract.Operator;
+import com.lxy.termdate.contract.Value;
 
 import java.io.IOException;
 
 public class MergeStates {
 
-    private static final int MERGE_ROWS_STRIDE = TimeTableData.MAXIMUM_MERGED_ROW * (2 * Byte.BYTES) + 1;
+    private static final int MERGE_ROWS_STRIDE = TermDateData.MAXIMUM_MERGED_ROW * (2 * Byte.BYTES) + 1;
     // Merged states now generated compile time as raw resource
     @NonNull
     private static final byte[] MERGE_STATE;
 
     static {
-        final var SIZE = (TimeTableData.MAXIMUM_MERGED_ROWS + 1) * (TimeTableData.MAXIMUM_MERGED_ROW * 2 + 1);
+        final var SIZE = (TermDateData.MAXIMUM_MERGED_ROWS + 1) * (TermDateData.MAXIMUM_MERGED_ROW * 2 + 1);
 
         byte[] state;
         try {
@@ -39,7 +39,7 @@ public class MergeStates {
     private final byte count;
 
     public MergeStates(char mergedRowsIndex) {
-        Contract.requireValidIndex(mergedRowsIndex, TimeTableData.MAXIMUM_MERGED_ROWS);
+        Contract.requireValidIndex(mergedRowsIndex, TermDateData.MAXIMUM_MERGED_ROWS);
         var mergedRowsStartIndex = mergedRowsIndex * MERGE_ROWS_STRIDE;
         this.count = MERGE_STATE[mergedRowsStartIndex];
         this.mergedRowsStartIndex = mergedRowsIndex;
@@ -47,13 +47,13 @@ public class MergeStates {
 
     public static int getFirstRow(char mergedRow) {
         var firstRow = (byte) (mergedRow >> 8);
-        TimeTableData.validateRowIndex(firstRow);
+        TermDateData.validateRowIndex(firstRow);
         return firstRow;
     }
 
     public static int getLastRow(char mergedRow) {
         var lastRow = (byte) (mergedRow);
-        TimeTableData.validateRowIndex(lastRow);
+        TermDateData.validateRowIndex(lastRow);
         return lastRow;
     }
 

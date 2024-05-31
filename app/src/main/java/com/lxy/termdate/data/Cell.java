@@ -1,8 +1,8 @@
-package com.lxy.timetable.data;
+package com.lxy.termdate.data;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.contract.Contract;
+import com.lxy.termdate.contract.Contract;
 
 public class Cell {
     @NonNull
@@ -41,8 +41,8 @@ public class Cell {
     @NonNull
     @Override
     public String toString() {
-        if (TimeTableData.isValid()) {
-            return TimeTableData.isEven() ? getEven() : getOdd();
+        if (TermDateData.isValid()) {
+            return TermDateData.isEven() ? getEven() : getOdd();
         }
         return "";
     }

@@ -1,10 +1,10 @@
-package com.lxy.timetable.enumset;
+package com.lxy.termdate.enumset;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.lxy.timetable.contract.Contract;
-import com.lxy.timetable.util.HashUtil;
+import com.lxy.termdate.contract.Contract;
+import com.lxy.termdate.util.HashUtil;
 
 import java.lang.reflect.Array;
 import java.util.Collection;

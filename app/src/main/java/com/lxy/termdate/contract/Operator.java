@@ -1,4 +1,4 @@
-package com.lxy.timetable.contract;
+package com.lxy.termdate.contract;
 
 import androidx.annotation.NonNull;
 

@@ -1,8 +1,8 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.contract.Contract;
+import com.lxy.termdate.contract.Contract;
 
 import java.io.FilterInputStream;
 import java.io.IOException;

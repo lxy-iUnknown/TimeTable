@@ -1,12 +1,12 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 
-import com.lxy.timetable.GlobalContext;
-import com.lxy.timetable.contract.Contract;
+import com.lxy.termdate.GlobalContext;
+import com.lxy.termdate.contract.Contract;
 
 public class ToastUtil {
     public static void toast(@StringRes int resId) {

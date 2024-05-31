@@ -1,4 +1,4 @@
-package com.lxy.timetable.data;
+package com.lxy.termdate.data;
 
 import androidx.annotation.IntDef;
 

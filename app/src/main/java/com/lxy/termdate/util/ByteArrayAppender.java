@@ -1,10 +1,10 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.contract.Contract;
-import com.lxy.timetable.contract.Operator;
-import com.lxy.timetable.contract.Value;
+import com.lxy.termdate.contract.Contract;
+import com.lxy.termdate.contract.Operator;
+import com.lxy.termdate.contract.Value;
 
 // Simplified ByteArrayOutputStream, all methods are not synchronized
 public class ByteArrayAppender {

@@ -1,4 +1,4 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 public class HashUtil {
     private static final int PRIME = 31;

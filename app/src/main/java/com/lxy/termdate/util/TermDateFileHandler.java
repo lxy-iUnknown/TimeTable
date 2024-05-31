@@ -1,11 +1,11 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public interface TimeTableFileHandler {
+public interface TermDateFileHandler {
     @Nullable
     InputStream openInputStream() throws IOException;
 

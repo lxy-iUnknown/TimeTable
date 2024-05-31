@@ -1,4 +1,4 @@
-package com.lxy.timetable;
+package com.lxy.termdate;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -31,22 +31,22 @@ import com.bin.david.form.data.format.sequence.BaseSequenceFormat;
 import com.bin.david.form.data.style.FontStyle;
 import com.bin.david.form.data.style.LineStyle;
 import com.bin.david.form.data.table.ArrayTableData;
-import com.lxy.timetable.contract.Contract;
-import com.lxy.timetable.contract.Operator;
-import com.lxy.timetable.contract.Value;
-import com.lxy.timetable.data.Cell;
-import com.lxy.timetable.data.DeserializeResult;
-import com.lxy.timetable.data.MergeStates;
-import com.lxy.timetable.data.TimeTableData;
-import com.lxy.timetable.databinding.ActivityMainBinding;
-import com.lxy.timetable.enumset.OneEnumSet;
-import com.lxy.timetable.enumset.TwoEnumSet;
-import com.lxy.timetable.util.ArrayView;
-import com.lxy.timetable.util.CopyingInputStream;
-import com.lxy.timetable.util.DateUtil;
-import com.lxy.timetable.util.InstanceFieldAccessor;
-import com.lxy.timetable.util.TimeTableFileHandler;
-import com.lxy.timetable.util.ToastUtil;
+import com.lxy.termdate.contract.Contract;
+import com.lxy.termdate.contract.Operator;
+import com.lxy.termdate.contract.Value;
+import com.lxy.termdate.data.Cell;
+import com.lxy.termdate.data.DeserializeResult;
+import com.lxy.termdate.data.MergeStates;
+import com.lxy.termdate.data.TermDateData;
+import com.lxy.termdate.databinding.ActivityMainBinding;
+import com.lxy.termdate.enumset.OneEnumSet;
+import com.lxy.termdate.enumset.TwoEnumSet;
+import com.lxy.termdate.util.ArrayView;
+import com.lxy.termdate.util.CopyingInputStream;
+import com.lxy.termdate.util.DateUtil;
+import com.lxy.termdate.util.InstanceFieldAccessor;
+import com.lxy.termdate.util.TermDateFileHandler;
+import com.lxy.termdate.util.ToastUtil;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -72,13 +72,13 @@ import timber.log.Timber;
 
 public class MainActivity extends ComponentActivity {
     private static final int OFFSET = 1;
-    private static final int REAL_ROW_COUNT = TimeTableData.ROW_COUNT;
-    private static final int REAL_COLUMN_COUNT = TimeTableData.COLUMN_COUNT + OFFSET;
+    private static final int REAL_ROW_COUNT = TermDateData.ROW_COUNT;
+    private static final int REAL_COLUMN_COUNT = TermDateData.COLUMN_COUNT + OFFSET;
     @SuppressWarnings("unused")
     private static final int REAL_CELL_COUNT = REAL_ROW_COUNT * REAL_COLUMN_COUNT;
     private static final int SYSTEM_BARS = WindowInsetsCompat.Type.systemBars();
     @NonNull
-    private static final String TIME_TABLE_DATA_FILE_NAME = "TimeTable.bin";
+    private static final String TIME_TABLE_DATA_FILE_NAME = "TermDate.bin";
     @NonNull
     private static final String MIME_ALL = "*/*";
     @NonNull
@@ -131,7 +131,7 @@ public class MainActivity extends ComponentActivity {
     private static final TableConfig DEFAULT_TABLE_CONFIG;
 
     static {
-        final var CELL_RANGE_COUNT = TimeTableData.MAXIMUM_MERGED_ROWS * TimeTableData.COLUMN_COUNT;
+        final var CELL_RANGE_COUNT = TermDateData.MAXIMUM_MERGED_ROWS * TermDateData.COLUMN_COUNT;
 
         var ranges = new CellRange[CELL_RANGE_COUNT];
         for (var i = 0; i < CELL_RANGE_COUNT; i++) {
@@ -146,20 +146,20 @@ public class MainActivity extends ComponentActivity {
             @Override
             @NonNull
             public String get(int index) {
-                TimeTableData.validateRowIndex(index);
+                TermDateData.validateRowIndex(index);
                 return ROW_HEADER[index];
             }
 
             @Override
             public int size() {
-                return TimeTableData.ROW_COUNT;
+                return TermDateData.ROW_COUNT;
             }
         });
         column.setFast(true);
 
         var tableData = ArrayTableData.create(
                 (String) null, null,
-                TimeTableData.TIME_TABLE_DATA,
+                TermDateData.TIME_TABLE_DATA,
                 null);
         tableData.getColumns().add(0, column);
         addColumn(tableData, column);
@@ -196,8 +196,8 @@ public class MainActivity extends ComponentActivity {
             Timber.d("Padding: %dpx", paddingPx);
         }
         TABLE_WIDTH_DELTA = paddingPx +
-                (TimeTableData.COLUMN_COUNT + 1) * (dividerWidthPx + 1) +
-                TimeTableData.COLUMN_COUNT * paddingPx * 2;
+                (TermDateData.COLUMN_COUNT + 1) * (dividerWidthPx + 1) +
+                TermDateData.COLUMN_COUNT * paddingPx * 2;
 
         ROW_HEADER = resources.getStringArray(R.array.row_header);
         COLUMN_HEADER = resources.getStringArray(R.array.column_header);
@@ -231,10 +231,10 @@ public class MainActivity extends ComponentActivity {
 
     @NonNull
     private final ActivityResultLauncher<String[]> importTable =
-            registerForActivityResult(OPEN_DOCUMENT, this::openExternalTimeTableFile);
+            registerForActivityResult(OPEN_DOCUMENT, this::openExternalTermDateFile);
     @NonNull
     private final ActivityResultLauncher<String> exportTable =
-            registerForActivityResult(CREATE_DOCUMENT, this::saveExternalTimeTable);
+            registerForActivityResult(CREATE_DOCUMENT, this::saveExternalTermDate);
     private ActivityMainBinding binding;
     @NonNull
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -268,7 +268,7 @@ public class MainActivity extends ComponentActivity {
     private static void handleIOException(@NonNull IOException e) {
         ToastUtil.toast(R.string.open_time_table_file_failed);
         if (BuildConfig.DEBUG) {
-            Timber.e(e, "Open timetable data file failed");
+            Timber.e(e, "Open termdate data file failed");
         }
     }
 
@@ -276,16 +276,15 @@ public class MainActivity extends ComponentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        binding = DataBindingUtil.setContentView(
-                this, R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(binding.activityMain, (v, insets) -> {
             Insets systemBars = insets.getInsets(SYSTEM_BARS);
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        initializeTimeTable();
+        initializeTermDate();
         initializeBinding();
-        openInternalTimeTableFile();
+        openInternalTermDateFile();
     }
 
     @SuppressWarnings({"unchecked"})
@@ -309,8 +308,8 @@ public class MainActivity extends ComponentActivity {
             if (BuildConfig.DEBUG) {
                 Timber.d("Rest width: %dpx", restWidth);
             }
-            var format = new MultiLineDrawFormat<>(restWidth / TimeTableData.COLUMN_COUNT);
-            for (var i = 0; i < TimeTableData.COLUMN_COUNT; i++) {
+            var format = new MultiLineDrawFormat<>(restWidth / TermDateData.COLUMN_COUNT);
+            for (var i = 0; i < TermDateData.COLUMN_COUNT; i++) {
                 columns.get(i + OFFSET).setDrawFormat(format);
             }
             config.setMinTableWidth(tableWidth);
@@ -325,10 +324,10 @@ public class MainActivity extends ComponentActivity {
         var smartTable = getSmartTable();
         binding.buttonImport.setOnClickListener(v -> importTable.launch(FILTER_MIME_ALL));
         binding.buttonExport.setOnClickListener(v -> {
-            if (TimeTableData.isValid() || checkFileAccess(TIME_TABLE_DATA_PATH, true)) {
+            if (TermDateData.isValid() || checkFileAccess(TIME_TABLE_DATA_PATH, true)) {
                 exportTable.launch(TIME_TABLE_DATA_FILE_NAME);
             } else {
-                promptAndOpenTimeTableFile();
+                promptAndOpenTermDateFile();
             }
         });
         tableMeasurer = Contract.requireNonNull(SmartTable_measurer.get(smartTable));
@@ -358,7 +357,7 @@ public class MainActivity extends ComponentActivity {
         importTable.launch(FILTER_MIME_ALL);
     }
 
-    private void promptAndOpenTimeTableFile() {
+    private void promptAndOpenTermDateFile() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.prompt_load_time_table_file)
                 .setCancelable(true)
@@ -367,10 +366,10 @@ public class MainActivity extends ComponentActivity {
                 .show();
     }
 
-    private void openTimeTableFile(@NonNull TimeTableFileHandler handler) {
+    private void openTermDateFile(@NonNull TermDateFileHandler handler) {
         Contract.requireNonNull(handler);
         if (BuildConfig.DEBUG) {
-            Timber.d("Open timetable file");
+            Timber.d("Open termdate file");
         }
         try {
             try (var inputStream = handler.openInputStream()) {
@@ -379,20 +378,20 @@ public class MainActivity extends ComponentActivity {
                     handler.fileNotFound();
                     return;
                 }
-                switch (TimeTableData.deserialize(inputStream)) {
+                switch (TermDateData.deserialize(inputStream)) {
                     case DeserializeResult.OK -> {
                         if (handler.reallySucceeded()) {
                             ToastUtil.toast(R.string.open_time_table_file_succeeded);
-                            openTimeTableSucceed();
+                            openTermDateSucceed();
                             return;
                         } else {
-                            TimeTableData.clear();
+                            TermDateData.clear();
                         }
                     }
                     case DeserializeResult.INVALID_FILE -> {
                         ToastUtil.toast(R.string.time_table_file_corrupted);
                         if (BuildConfig.DEBUG) {
-                            Timber.w("Open timetable failed.");
+                            Timber.w("Open termdate failed.");
                         }
                     }
                 }
@@ -403,15 +402,15 @@ public class MainActivity extends ComponentActivity {
         handler.failed();
     }
 
-    private void openInternalTimeTableFile() {
-        if (TimeTableData.isValid()) {
+    private void openInternalTermDateFile() {
+        if (TermDateData.isValid()) {
             if (BuildConfig.DEBUG) {
                 Timber.d("Table is already loaded");
             }
             return;
         }
-        openTimeTableFile(new TimeTableFileHandler() {
-            private static void internalTimeTableFileNotFound() {
+        openTermDateFile(new TermDateFileHandler() {
+            private static void internalTermDateFileNotFound() {
                 if (BuildConfig.DEBUG) {
                     Timber.e("Internal time table file not found");
                 }
@@ -426,10 +425,10 @@ public class MainActivity extends ComponentActivity {
                         return Channels.newInputStream(Files.newByteChannel(
                                 path, OPTIONS_READ, EMPTY_FILE_ATTRIBUTES));
                     } else {
-                        internalTimeTableFileNotFound();
+                        internalTermDateFileNotFound();
                     }
                 } catch (NoSuchFileException | DirectoryNotEmptyException e) {
-                    internalTimeTableFileNotFound();
+                    internalTermDateFileNotFound();
                 }
                 return null;
             }
@@ -449,13 +448,13 @@ public class MainActivity extends ComponentActivity {
             public void failed() {
                 try {
                     if (BuildConfig.DEBUG) {
-                        Timber.w("Try to delete timetable data file");
+                        Timber.w("Try to delete termdate data file");
                     }
                     Files.delete(TIME_TABLE_DATA_PATH);
                 } catch (NoSuchFileException | DirectoryNotEmptyException e) {
                     ToastUtil.toast(R.string.delete_time_table_file_failed);
                     if (BuildConfig.DEBUG) {
-                        Timber.e(e, "Delete timetable data file failed");
+                        Timber.e(e, "Delete termdate data file failed");
                     }
                 } catch (IOException e) {
                     handleIOException(e);
@@ -465,27 +464,27 @@ public class MainActivity extends ComponentActivity {
         });
     }
 
-    private void initializeTimeTable() {
+    private void initializeTermDate() {
         if (BuildConfig.DEBUG) {
-            Timber.d("Initialize timetable");
+            Timber.d("Initialize termdate");
         }
         TIME_TABLE_DATA.setOnItemClickListener((column, value, o, col, row) -> {
             if (col < OFFSET) {
                 ToastUtil.toast(ROW_TOOLTIP[row]);
             } else {
-                if (TimeTableData.isValid()) {
-                    Cell cell = TimeTableData.TIME_TABLE_DATA[col - OFFSET][row];
+                if (TermDateData.isValid()) {
+                    Cell cell = TermDateData.TIME_TABLE_DATA[col - OFFSET][row];
                     ToastUtil.toast(GlobalContext.get().getString(
                             R.string.class_info, cell.getOdd(), cell.getEven()));
                 } else {
-                    promptAndOpenTimeTableFile();
+                    promptAndOpenTermDateFile();
                 }
             }
         });
         var tableMain = getSmartTable();
         var config = DEFAULT_TABLE_CONFIG;
         if (BuildConfig.DEBUG) {
-            Timber.d("Setting timetable config");
+            Timber.d("Setting termdate config");
         }
         var fontStyle = new FontStyle((int) getResources().
                 getDimension(R.dimen.font_size), binding.textViewBeginTime.getCurrentTextColor());
@@ -508,13 +507,13 @@ public class MainActivity extends ComponentActivity {
         return binding.tableMain;
     }
 
-    private void openTimeTableSucceed() {
+    private void openTermDateSucceed() {
         var view = MERGED_CELL_RANGES_VIEW;
         var tableData = TIME_TABLE_DATA;
         int length = 0;
         var ranges = view.getArray();
-        for (var column = 0; column < TimeTableData.COLUMN_COUNT; column++) {
-            var mergeStates = new MergeStates(TimeTableData.MERGE_STATES[column]);
+        for (var column = 0; column < TermDateData.COLUMN_COUNT; column++) {
+            var mergeStates = new MergeStates(TermDateData.MERGE_STATES[column]);
             for (var index = 0; index < mergeStates.getCount(); index++) {
                 var realColumn = column + OFFSET;
                 var range = ranges[length++];
@@ -535,9 +534,9 @@ public class MainActivity extends ComponentActivity {
 
     private void refreshTimeAndWeeks() {
         String text;
-        if (TimeTableData.isValid()) {
+        if (TermDateData.isValid()) {
             var now = DateUtil.now();
-            var beginDate = TimeTableData.beginDate();
+            var beginDate = TermDateData.beginDate();
             var weeks = DateUtil.weekCount(beginDate, now);
             if (BuildConfig.DEBUG) {
                 Timber.d("Now: %s, Begin date: %s, Weeks: %d",
@@ -553,7 +552,7 @@ public class MainActivity extends ComponentActivity {
         binding.textViewBeginTime.setText(text);
     }
 
-    private void openExternalTimeTableFile(Uri result) {
+    private void openExternalTermDateFile(Uri result) {
         if (result == null) {
             ToastUtil.toast(R.string.request_cancelled);
             if (BuildConfig.DEBUG) {
@@ -562,9 +561,9 @@ public class MainActivity extends ComponentActivity {
             return;
         }
         if (BuildConfig.DEBUG) {
-            Timber.d("Timetable file location: \"%s\"", result);
+            Timber.d("Term date file location: \"%s\"", result);
         }
-        openTimeTableFile(new TimeTableFileHandler() {
+        openTermDateFile(new TermDateFileHandler() {
             private CopyingInputStream stream;
 
             @Nullable
@@ -578,13 +577,13 @@ public class MainActivity extends ComponentActivity {
                         }
                     } else {
                         var stream = new CopyingInputStream(
-                                inputStream, TimeTableData.ESTIMATED_FILE_SIZE);
+                                inputStream, TermDateData.ESTIMATED_FILE_SIZE);
                         this.stream = stream;
                         return stream;
                     }
                 } catch (FileNotFoundException e) {
                     if (BuildConfig.DEBUG) {
-                        Timber.d(e, "Open external timetable data file not found");
+                        Timber.d(e, "Open external termdate data file not found");
                     }
                 }
                 remeasureTable();
@@ -603,7 +602,7 @@ public class MainActivity extends ComponentActivity {
                     result = true;
                 } catch (IOException e) {
                     if (BuildConfig.DEBUG) {
-                        Timber.d(e, "Write internal timetable data file failed");
+                        Timber.d(e, "Write internal termdate data file failed");
                     }
                     ToastUtil.toast(R.string.save_time_table_file_to_internal_storage_failed);
                     result = false;
@@ -624,7 +623,7 @@ public class MainActivity extends ComponentActivity {
         });
     }
 
-    private void saveExternalTimeTable(@Nullable Uri result) {
+    private void saveExternalTermDate(@Nullable Uri result) {
         if (result == null) {
             ToastUtil.toast(R.string.request_cancelled);
             if (BuildConfig.DEBUG) {
@@ -634,7 +633,7 @@ public class MainActivity extends ComponentActivity {
         }
         try {
             if (BuildConfig.DEBUG) {
-                Timber.d("Save timetable file, location: %s", result);
+                Timber.d("Save termdate file, location: %s", result);
             }
             var path = TIME_TABLE_DATA_PATH;
             try (var outputStream = getContentResolver().openOutputStream(result)) {
@@ -646,7 +645,7 @@ public class MainActivity extends ComponentActivity {
                     return;
                 }
                 try {
-                    var serialized = TimeTableData.serialize();
+                    var serialized = TermDateData.serialize();
                     if (!checkFileAccess(path, false)) {
                         try (SeekableByteChannel outputChannel = Files.newByteChannel(
                                 path, OPTIONS_CREATE_NEW, EMPTY_FILE_ATTRIBUTES)) {
@@ -662,7 +661,7 @@ public class MainActivity extends ComponentActivity {
         } catch (IOException e) {
             ToastUtil.toast(R.string.save_time_table_file_failed);
             if (BuildConfig.DEBUG) {
-                Timber.e(e, "Save timetable data file failed");
+                Timber.e(e, "Save termdate data file failed");
             }
         }
     }

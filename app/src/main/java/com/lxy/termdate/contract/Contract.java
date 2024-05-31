@@ -1,9 +1,9 @@
-package com.lxy.timetable.contract;
+package com.lxy.termdate.contract;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.lxy.timetable.BuildConfig;
+import com.lxy.termdate.BuildConfig;
 
 import timber.log.Timber;
 

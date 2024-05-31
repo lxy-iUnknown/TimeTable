@@ -1,13 +1,13 @@
-package com.lxy.timetable.data;
+package com.lxy.termdate.data;
 
 import androidx.annotation.NonNull;
 
-import com.lxy.timetable.BuildConfig;
-import com.lxy.timetable.contract.Contract;
-import com.lxy.timetable.contract.Operator;
-import com.lxy.timetable.contract.Value;
-import com.lxy.timetable.util.ByteArrayAppender;
-import com.lxy.timetable.util.DateUtil;
+import com.lxy.termdate.BuildConfig;
+import com.lxy.termdate.contract.Contract;
+import com.lxy.termdate.contract.Operator;
+import com.lxy.termdate.contract.Value;
+import com.lxy.termdate.util.ByteArrayAppender;
+import com.lxy.termdate.util.DateUtil;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -19,14 +19,14 @@ import java.util.Arrays;
 
 import timber.log.Timber;
 
-public class TimeTableData {
+public class TermDateData {
     public static final int ROW_COUNT = 12;
     public static final int COLUMN_COUNT = 5;
     public static final int CELL_COUNT = ROW_COUNT * COLUMN_COUNT;
     public static final int MIN_STRING_LENGTH = 0;
     public static final int MAX_STRING_LENGTH = (1 << Byte.SIZE) - 1;
 
-    public static final int MAXIMUM_MERGED_ROW = TimeTableData.ROW_COUNT / 2;
+    public static final int MAXIMUM_MERGED_ROW = TermDateData.ROW_COUNT / 2;
     @SuppressWarnings("PointlessArithmeticExpression")
     public static final int MIN_FILE_SIZE = Integer.SIZE /* gregorian date */ +
             CELL_COUNT * 2 /* odd even */ * (Byte.BYTES /* length */ + MIN_STRING_LENGTH * Character.BYTES) +
@@ -36,7 +36,7 @@ public class TimeTableData {
     public static final int MAX_FILE_SIZE = Integer.SIZE /* gregorian date */ +
             CELL_COUNT * 2 /* odd even */ * (Byte.BYTES /* length */ + MAX_STRING_LENGTH * Character.BYTES) +
             MAXIMUM_MERGED_ROW * Character.BYTES /* merge_state */;
-    public static final int MAXIMUM_MERGED_ROWS = (1 << (TimeTableData.ROW_COUNT - 1)) - 1;
+    public static final int MAXIMUM_MERGED_ROWS = (1 << (TermDateData.ROW_COUNT - 1)) - 1;
     @NonNull
     public static final char[] MERGE_STATES = new char[COLUMN_COUNT];
     @NonNull
@@ -45,12 +45,12 @@ public class TimeTableData {
     @NonNull
     private static final byte[] READ_WRITE_BUFFER = new byte[Long.BYTES];
     @NonNull
-    private static final byte[] BYTE_BUFFER = new byte[TimeTableData.MAX_STRING_LENGTH * Character.BYTES];
+    private static final byte[] BYTE_BUFFER = new byte[TermDateData.MAX_STRING_LENGTH * Character.BYTES];
     @NonNull
     private static final CharBuffer WRAPPED_CHAR_BUFFER =
             ByteBuffer.wrap(BYTE_BUFFER).order(ByteOrder.LITTLE_ENDIAN).asCharBuffer();
     @NonNull
-    private static final char[] CHAR_BUFFER = new char[TimeTableData.MAX_STRING_LENGTH];
+    private static final char[] CHAR_BUFFER = new char[TermDateData.MAX_STRING_LENGTH];
     private static final int INVALID = -1;
 
     private static int BEGIN_DATE;
@@ -157,7 +157,7 @@ public class TimeTableData {
         var length = value.length();
         Contract.requireOperation(
                 new Value<>("length", length),
-                new Value<>(TimeTableData.MAX_STRING_LENGTH),
+                new Value<>(TermDateData.MAX_STRING_LENGTH),
                 Operator.LE
         );
         appender.append(length);
@@ -231,7 +231,7 @@ public class TimeTableData {
     @NonNull
     public static ByteArrayAppender serialize() {
         if (BuildConfig.DEBUG) {
-            Timber.d("Serialize timetable data");
+            Timber.d("Serialize termdate data");
         }
         var buffer = new ByteArrayAppender(ESTIMATED_FILE_SIZE);
         writeLittleEndianInt(buffer, BEGIN_DATE);
@@ -246,7 +246,7 @@ public class TimeTableData {
 
     public static @DeserializeResult int deserialize(@NonNull InputStream stream) throws IOException {
         if (BuildConfig.DEBUG) {
-            Timber.d("Deserialize timetable data");
+            Timber.d("Deserialize termdate data");
         }
         try {
             var epochDay = Integer.toUnsignedLong(readLittleEndianInt(stream));
@@ -281,7 +281,7 @@ public class TimeTableData {
             }
             for (var row = 0; row < ROW_COUNT; row++) {
                 for (var column = 0; column < COLUMN_COUNT; column++) {
-                    TIME_TABLE_DATA[column][row].copyFrom(cells[row * TimeTableData.COLUMN_COUNT + column]);
+                    TIME_TABLE_DATA[column][row].copyFrom(cells[row * TermDateData.COLUMN_COUNT + column]);
                 }
             }
             System.arraycopy(mergeStates, 0, MERGE_STATES, 0, COLUMN_COUNT);
@@ -290,7 +290,7 @@ public class TimeTableData {
             return DeserializeResult.OK;
         } catch (EOFException e) {
             if (BuildConfig.DEBUG) {
-                Timber.e(e, "End of file occurred because timetable data file is invalid");
+                Timber.e(e, "End of file occurred because termdate data file is invalid");
             }
             return DeserializeResult.INVALID_FILE;
         }

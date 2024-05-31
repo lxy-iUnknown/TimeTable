@@ -1,10 +1,10 @@
-package com.lxy.timetable.util;
+package com.lxy.termdate.util;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.lxy.timetable.BuildConfig;
-import com.lxy.timetable.contract.Contract;
+import com.lxy.termdate.BuildConfig;
+import com.lxy.termdate.contract.Contract;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
