@@ -1,9 +1,9 @@
 [versions]
-agp = "8.4.0"
-activity = "1.8.2"
+agp = "8.6.0-alpha06"
+activity = "1.9.0"
 smartTable = "master"
 timber = "5.0.1"
-kotlinBom = "1.9.23"
+kotlinBom = "2.0.0"
 
 [libraries]
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
